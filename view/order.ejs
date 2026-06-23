@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .orders-header h1 {
+            margin: 0;
+            color: var(--text);
+        }
+
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-section p {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .logout-btn {
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .orders-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(43, 124, 59, 0.1);
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .orders-table th {
+            background: var(--primary);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .orders-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .orders-table tr:hover {
+            background: var(--primary-lighter);
+        }
+
+        .orders-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .empty-state h2 {
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div class="welcome-section">
+        <div>
+            <h2 style="margin: 0; color: var(--text);">Welcome, <span style="color: var(--primary);"><%= adminEmail %></span></h2>
+        </div>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+
+    <div class="orders-header">
+        <h1>Customer Orders</h1>
+        <span style="color: var(--muted); font-size: 18px;"><%= orders.length %> order<%= orders.length !== 1 ? 's' : '' %></span>
+    </div>
+
+    <% if (orders.length > 0) { %>
+        <div class="orders-container">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Customer Name</th>
+                        <th>Email Address</th>
+                        <th>Phone Number</th>
+                        <th>Product Ordered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td><strong><%= order.name %></strong></td>
+                            <td><%= order.email %></td>
+                            <td><%= order.phone %></td>
+                            <td><%= order.product ? order.product.name : 'N/A' %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    <% } else { %>
+        <div class="empty-state">
+            <h2>No Orders Yet</h2>
+            <p>There are no customer orders at this time.</p>
+        </div>
+    <% } %>
+</div>
+
+</body>
+</html>

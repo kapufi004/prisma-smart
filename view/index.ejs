@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Watch Store</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    
+<header class="navbar">
+    <div class="logo">SmartStore</div>
+
+   
+        <nav>
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/orders">Orders</a>
+    <a href="/login">Login</a>
+</nav>
+    
+</header>
+
+<section class="hero">
+    <div class="products-container">
+
+    <% products.forEach(product => { %>
+
+        <div class="product-card">
+
+            <img
+                src="<%= product.image %>"
+                alt="<%= product.name %>"
+                class="product-card-image">
+
+            <h2><%= product.name %></h2>
+
+            <p class="product-description">
+                <%= product.description %>
+            </p>
+
+            <p class="product-price">
+                TSH <%= product.price %>
+            </p>
+
+            <div class="order-section">
+                <a class="order-link" href="/products/<%= product.id %>/order">Order Now</a>
+            </div>
+
+        </div>
+
+    <% }) %>
+
+    </div>
+</section>
+
+
+</body>
+</html>

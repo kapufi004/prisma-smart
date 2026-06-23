@@ -1,0 +1,322 @@
+const multer = require("multer");
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "public/uploads");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
+
+const upload = multer({ storage });
+
+const express = require("express");
+const path = require("path");
+const session = require("express-session");
+const { PrismaClient } = require("@prisma/client");
+
+const app = express();
+const prisma = new PrismaClient();
+
+// Settings
+app.set("views", path.join(__dirname, "view"));
+app.set("view engine", "ejs");
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+
+app.set("trust proxy", 1);
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || "smartwatch-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax"
+    }
+}));
+
+app.use(express.static("public"));
+
+
+// =========================
+// HOME PAGE
+// =========================
+app.get("/", async (req, res) => {
+
+    const products = await prisma.product.findMany();
+
+    res.render("index", { products });
+
+});
+
+// =========================
+// SAVE ORDER
+// =========================
+app.post("/order", async (req, res) => {
+
+    const { name, email, phone, productId } = req.body;
+
+    try {
+
+        await prisma.order.create({
+            data: {
+                name,
+                email,
+                phone,
+                productId: productId ? parseInt(productId, 10) : undefined
+            }
+
+        });
+
+        res.redirect("/");
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.send("Error saving order");
+
+    }
+
+});
+
+
+// =========================
+// LOGIN PAGE
+// =========================
+app.get("/login", (req, res) => {
+
+    res.render("login", {
+        error: null
+    });
+
+});
+
+
+// =========================
+// HANDLE LOGIN
+// =========================
+app.post("/login", async (req, res) => {
+
+    const { email, password } = req.body;
+
+    try {
+
+        const admin = await prisma.admin.findFirst({
+            where: {
+                email,
+                password
+            }
+        });
+
+        if (admin) {
+
+            req.session.adminId = admin.id;
+            req.session.adminEmail = admin.email;
+
+            res.redirect("/dashboard");
+
+        } else {
+
+            res.render("login", {
+                error: "Invalid Email or Password"
+            });
+
+        }
+
+    } catch (error) {
+
+        console.log(error);
+
+        res.send("Login Error");
+
+    }
+
+});
+
+
+// =========================
+// PROTECTED DASHBOARD PAGE
+// =========================
+app.get("/orders", async (req, res) => {
+
+    if (!req.session.adminId) {
+        return res.redirect("/login");
+    }
+
+    const orders = await prisma.order.findMany({
+        include: {
+            product: true
+        }
+    });
+
+    res.render("order", {
+        orders,
+        adminEmail: req.session.adminEmail
+    });
+
+});
+
+
+// =========================
+// LOGOUT
+// =========================
+app.get("/logout", (req, res) => {
+
+    req.session.destroy(() => {
+
+        res.redirect("/login");
+
+    });
+
+});
+
+
+// =========================
+// TEST ROUTE
+// =========================
+app.get("/test", (req, res) => {
+
+    res.send("<h1>Express is working!</h1>");
+
+});
+
+//products page
+app.get("/products", async (req, res) => {
+
+    const products = await prisma.product.findMany();
+
+    console.log(products); // temporary test
+
+    res.render("products", { products });
+
+});
+
+// Customer: order specific product
+app.get("/products/:id/order", async (req, res) => {
+
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+        return res.send("Invalid product id");
+    }
+
+    const product = await prisma.product.findUnique({
+        where: { id }
+    });
+
+    if (!product) {
+        return res.send("Product not found");
+    }
+
+    res.render("product-order", { product });
+});
+// New product form
+app.get("/products/new", (req, res) => {
+
+    res.render("new-product");
+
+});
+
+// Handle new product form submission
+app.post(
+    "/products/new",
+    upload.single("image"),
+    async (req, res) => {
+
+        const { name, description, price } = req.body;
+
+        const image = "/uploads/" + req.file.filename;
+
+        await prisma.product.create({
+            data: {
+                name,
+                description,
+                price: parseFloat(price),
+                image
+            }
+        });
+
+        res.redirect("/products");
+
+    }
+);
+
+//========================
+//admin dashboard
+// =========================
+
+app.get("/dashboard", async (req, res) => {
+
+    if (!req.session.adminId) {
+        return res.redirect("/login");
+    }
+
+    const totalProducts = await prisma.product.count();
+    const totalOrders = await prisma.order.count();
+
+    res.render("dashboard", {
+        totalProducts,
+        totalOrders,
+        adminEmail: req.session.adminEmail
+    });
+});
+
+// Handle product deletion
+app.get("/products/delete/:id", async (req, res) => {
+
+    const id = parseInt(req.params.id);
+
+    await prisma.product.delete({
+        where: { id }
+    });
+
+    res.redirect("/products");
+
+});
+
+//edit product form
+app.get("/products/edit/:id", async (req, res) => {
+
+    const id = parseInt(req.params.id);
+
+    const product = await prisma.product.findUnique({
+        where: { id }
+    });
+
+    res.render("edit-product", { product });
+
+});
+
+app.post("/products/edit/:id", async (req, res) => {
+
+    const id = parseInt(req.params.id);
+
+    const { name, description, price, image } = req.body;
+
+    await prisma.product.update({
+        where: { id },
+        data: {
+            name,
+            description,
+            price: parseFloat(price),
+            image
+        }
+    });
+
+    res.redirect("/products");
+
+});
+    
+
+// START SERVER
+// =========================
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+
+    console.log(`Server running on http://localhost:${PORT}`);
+
+});

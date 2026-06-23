@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <div class="logo">SmartStore Admin</div>
+
+    <nav>
+        <a href="/">Store</a>
+        <a href="/products">Products</a>
+        <a href="/orders">Orders</a>
+        <a href="/logout">Logout</a>
+    </nav>
+</header>
+
+<div class="dashboard">
+
+    <h1>Welcome, <%= adminEmail %></h1>
+
+    <div class="stats">
+
+        <div class="card">
+            <h2><%= totalProducts %></h2>
+            <p>Total Products</p>
+        </div>
+
+        <div class="card">
+            <h2><%= totalOrders %></h2>
+            <p>Total Orders</p>
+        </div>
+
+    </div>
+
+</div>
+<div class="quick-actions">
+
+    <h2>Quick Actions</h2>
+
+    <div class="actions">
+
+        <a href="/products" class="action-btn">
+            📦 Manage Products
+        </a>
+
+        <a href="/orders" class="action-btn">
+            🛒 View Orders
+        </a>
+
+        <a href="/products/new" class="action-btn">
+            ➕ Add Product
+        </a>
+
+        <a href="/logout" class="action-btn">
+            🚪 Logout
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

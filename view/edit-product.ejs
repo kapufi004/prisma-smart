@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Product</title>
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-header h1 {
+            color: var(--text);
+            margin: 0;
+        }
+
+        .form-wrapper {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(43, 124, 59, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .product-form input,
+        .product-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            color: var(--text);
+            box-sizing: border-box;
+        }
+
+        .product-form input:focus,
+        .product-form textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px var(--primary-lighter);
+        }
+
+        .product-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .product-form button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .product-form button:hover {
+            background: var(--primary-light);
+        }
+
+        .btn-back {
+            display: inline-block;
+            background: white;
+            color: var(--primary);
+            padding: 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 2px solid var(--primary);
+            transition: 0.3s;
+        }
+
+        .btn-back:hover {
+            background: var(--primary-lighter);
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <div class="form-header">
+        <h1>Edit Product</h1>
+    </div>
+
+    <div class="form-wrapper">
+        <form action="/products/edit/<%= product.id %>" method="POST" class="product-form">
+
+            <div class="form-group">
+                <label for="name">Product Name</label>
+                <input type="text" id="name" name="name" value="<%= product.name %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" required><%= product.description %></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="price">Price (TSH)</label>
+                <input type="number" id="price" name="price" value="<%= product.price %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="image">Image URL</label>
+                <input type="text" id="image" name="image" value="<%= product.image %>" required>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">Update Product</button>
+            </div>
+
+        </form>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/products" class="btn-back">← Back to Products</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
