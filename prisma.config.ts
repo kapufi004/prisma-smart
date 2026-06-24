@@ -2,8 +2,8 @@
 // Prisma CLI reads .env files automatically
 import { defineConfig } from "prisma/config";
 
-const databaseUrl = process.env.DATABASE_URL
-  || process.env.MYSQL_URL;
+const databaseUrl = process.env.MYSQL_URL
+  || process.env.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error(
