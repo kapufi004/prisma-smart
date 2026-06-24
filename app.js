@@ -47,8 +47,8 @@ app.use(session({
 
 app.use(express.static("public"));
 
-// Serve the kapufi landing page as static assets
-app.use(express.static("kapufi"));
+// Serve kapufi assets under /landing/ prefix to avoid conflicts with public/
+app.use("/landing", express.static("kapufi"));
 
 // =========================
 // LANDING PAGE
