@@ -198,11 +198,37 @@ app.get("/logout", (req, res) => {
 // =========================
 // TEST ROUTE
 // =========================
+app.get("/seed", async (req, res) => {
+
+    try {
+        const count = await prisma.product.count();
+        if (count > 0) {
+            return res.send(`Database already has ${count} products. No seeding needed.`);
+        }
+
+        const products = [
+            { name: "Smart Watch Pro", description: "Premium smartwatch with heart rate monitor, GPS, and 7-day battery life.", price: 250000, image: "/uploads/1781471789423-smart.jpg" },
+            { name: "Smart Watch Lite", description: "Affordable smartwatch with fitness tracking and notifications.", price: 120000, image: "/uploads/1781471691632-smart1.jpg" },
+            { name: "Smart Watch Sport", description: "Rugged smartwatch designed for athletes with water resistance up to 50m.", price: 180000, image: "/uploads/1781471506684-smart2.png" }
+        ];
+
+        for (const p of products) {
+            await prisma.product.create({ data: p });
+        }
+
+        res.send(`Seeded ${products.length} products. <a href='/'>Go to home page</a>`);
+    } catch (err) {
+        console.error("Seed error:", err);
+        res.status(500).send("Seed error: " + err.message);
+    }
+
+});
+
 app.get("/test", async (req, res) => {
 
     try {
         const products = await prisma.product.findMany();
-        res.json({ count: products.length, products, dbUrl: (process.env.MYSQL_URL || "none").substring(0, 50) + "..." });
+        res.json({ count: products.length, dbUrl: (process.env.MYSQL_URL || "none").substring(0, 50) + "..." });
     } catch (err) {
         res.json({ error: err.message });
     }
