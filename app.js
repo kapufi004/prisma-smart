@@ -198,9 +198,14 @@ app.get("/logout", (req, res) => {
 // =========================
 // TEST ROUTE
 // =========================
-app.get("/test", (req, res) => {
+app.get("/test", async (req, res) => {
 
-    res.send("<h1>Express is working!</h1>");
+    try {
+        const products = await prisma.product.findMany();
+        res.json({ count: products.length, products, dbUrl: (process.env.MYSQL_URL || "none").substring(0, 50) + "..." });
+    } catch (err) {
+        res.json({ error: err.message });
+    }
 
 });
 
