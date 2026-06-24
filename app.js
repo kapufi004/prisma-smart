@@ -201,22 +201,38 @@ app.get("/logout", (req, res) => {
 app.get("/seed", async (req, res) => {
 
     try {
+        const msgs = [];
+
+        // Seed admin
+        const admin = await prisma.admin.findUnique({
+            where: { email: "admin@smartstore.com" }
+        });
+        if (!admin) {
+            await prisma.admin.create({
+                data: { email: "admin@smartstore.com", password: "admin123" }
+            });
+            msgs.push("Admin created: admin@smartstore.com / admin123");
+        } else {
+            msgs.push("Admin already exists");
+        }
+
+        // Seed products
         const count = await prisma.product.count();
-        if (count > 0) {
-            return res.send(`Database already has ${count} products. No seeding needed.`);
+        if (count === 0) {
+            const products = [
+                { name: "Smart Watch Pro", description: "Premium smartwatch with heart rate monitor, GPS, and 7-day battery life.", price: 250000, image: "/uploads/1781471789423-smart.jpg" },
+                { name: "Smart Watch Lite", description: "Affordable smartwatch with fitness tracking and notifications.", price: 120000, image: "/uploads/1781471691632-smart1.jpg" },
+                { name: "Smart Watch Sport", description: "Rugged smartwatch designed for athletes with water resistance up to 50m.", price: 180000, image: "/uploads/1781471506684-smart2.png" }
+            ];
+            for (const p of products) {
+                await prisma.product.create({ data: p });
+            }
+            msgs.push(`Seeded ${products.length} products`);
+        } else {
+            msgs.push(`Products already exist (${count})`);
         }
 
-        const products = [
-            { name: "Smart Watch Pro", description: "Premium smartwatch with heart rate monitor, GPS, and 7-day battery life.", price: 250000, image: "/uploads/1781471789423-smart.jpg" },
-            { name: "Smart Watch Lite", description: "Affordable smartwatch with fitness tracking and notifications.", price: 120000, image: "/uploads/1781471691632-smart1.jpg" },
-            { name: "Smart Watch Sport", description: "Rugged smartwatch designed for athletes with water resistance up to 50m.", price: 180000, image: "/uploads/1781471506684-smart2.png" }
-        ];
-
-        for (const p of products) {
-            await prisma.product.create({ data: p });
-        }
-
-        res.send(`Seeded ${products.length} products. <a href='/'>Go to home page</a>`);
+        res.send(msgs.join(". ") + `. <a href='/'>Go to home page</a>`);
     } catch (err) {
         console.error("Seed error:", err);
         res.status(500).send("Seed error: " + err.message);
