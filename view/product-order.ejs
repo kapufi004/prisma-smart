@@ -20,60 +20,65 @@
 
 <section class="order-page">
   <div class="order-wrapper">
-    <div class="order-details">
-      <div class="order-header">
-        <h1>Place your order</h1>
-        <p class="order-intro">Complete the form below to submit your order for this product.</p>
+    <div class="order-layout">
+      <div class="order-image">
+        <img src="<%= product.image %>" alt="<%= product.name %>">
       </div>
+      <div class="order-content">
+        <div class="order-header">
+          <h1>Place your order</h1>
+          <p class="order-intro">Complete the form below to submit your order for this product.</p>
+        </div>
 
-      <div class="order-section">
-        <h3>Customer details</h3>
-        <p class="order-note">Fill in your contact details and submit the order to reserve this product.</p>
+        <div class="order-section">
+          <h3>Customer details</h3>
+          <p class="order-note">Fill in your contact details and submit the order to reserve this product.</p>
 
-        <form action="/order" method="POST" class="order-form">
-          <input type="hidden" name="productId" value="<%= product.id %>">
+          <form action="/order" method="POST" class="order-form">
+            <input type="hidden" name="productId" value="<%= product.id %>">
 
-          <div class="form-group">
-            <label for="name">Full Name</label>
-            <input
-              id="name"
-              type="text"
-              name="name"
-              placeholder="Your name"
-              autocomplete="name"
-              required>
-          </div>
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input
+                id="name"
+                type="text"
+                name="name"
+                placeholder="Your name"
+                autocomplete="name"
+                required>
+            </div>
 
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="you@example.com"
-              autocomplete="email"
-              required>
-          </div>
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required>
+            </div>
 
-          <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input
-              id="phone"
-              type="tel"
-              name="phone"
-              placeholder="+255 7XX XXX XXX"
-              autocomplete="tel"
-              required>
-          </div>
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input
+                id="phone"
+                type="tel"
+                name="phone"
+                placeholder="+255 7XX XXX XXX"
+                autocomplete="tel"
+                required>
+            </div>
 
-          <div class="order-summary">
-            <h4>Order summary</h4>
-            <p><span>Product</span><strong><%= product.name %></strong></p>
-            <p><span>Price</span><strong>TSH <%= product.price %></strong></p>
-          </div>
+            <div class="order-summary">
+              <h4>Order summary</h4>
+              <p><span>Product</span><strong><%= product.name %></strong></p>
+              <p><span>Price</span><strong>TSH <%= product.price %></strong></p>
+            </div>
 
-          <button type="submit">Confirm Order</button>
-        </form>
+            <button type="submit">Confirm Order</button>
+          </form>
+        </div>
       </div>
     </div>
   </div>

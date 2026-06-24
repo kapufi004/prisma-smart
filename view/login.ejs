@@ -11,7 +11,9 @@
     <h1>⌚ SmartStore</h1>
     <h2>Admin Login</h2>
 
-   
+    <% if (error) { %>
+        <p class="error-message"><%= error %></p>
+    <% } %>
 
     <form action="/login" method="POST">
 

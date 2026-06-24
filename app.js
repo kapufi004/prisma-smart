@@ -1,7 +1,19 @@
+const express = require("express");
+const path = require("path");
+const fs = require("fs");
+const session = require("express-session");
 const multer = require("multer");
+const { PrismaClient } = require("@prisma/client");
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, "public", "uploads");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "public/uploads");
+        cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + "-" + file.originalname);
@@ -9,11 +21,6 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
-
-const express = require("express");
-const path = require("path");
-const session = require("express-session");
-const { PrismaClient } = require("@prisma/client");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -46,9 +53,13 @@ app.use(express.static("public"));
 // =========================
 app.get("/", async (req, res) => {
 
-    const products = await prisma.product.findMany();
-
-    res.render("index", { products });
+    try {
+        const products = await prisma.product.findMany();
+        res.render("index", { products });
+    } catch (err) {
+        console.error("Home error:", err);
+        res.status(500).send("Error loading products");
+    }
 
 });
 
@@ -61,12 +72,16 @@ app.post("/order", async (req, res) => {
 
     try {
 
+        if (!productId) {
+            return res.status(400).send("Product ID is required");
+        }
+
         await prisma.order.create({
             data: {
                 name,
                 email,
                 phone,
-                productId: productId ? parseInt(productId, 10) : undefined
+                productId: parseInt(productId, 10)
             }
 
         });
@@ -143,20 +158,25 @@ app.post("/login", async (req, res) => {
 // =========================
 app.get("/orders", async (req, res) => {
 
-    if (!req.session.adminId) {
-        return res.redirect("/login");
-    }
-
-    const orders = await prisma.order.findMany({
-        include: {
-            product: true
+    try {
+        if (!req.session.adminId) {
+            return res.redirect("/login");
         }
-    });
 
-    res.render("order", {
-        orders,
-        adminEmail: req.session.adminEmail
-    });
+        const orders = await prisma.order.findMany({
+            include: {
+                product: true
+            }
+        });
+
+        res.render("order", {
+            orders,
+            adminEmail: req.session.adminEmail
+        });
+    } catch (err) {
+        console.error("Orders error:", err);
+        res.status(500).send("Error loading orders");
+    }
 
 });
 
@@ -187,31 +207,39 @@ app.get("/test", (req, res) => {
 //products page
 app.get("/products", async (req, res) => {
 
-    const products = await prisma.product.findMany();
-
-    console.log(products); // temporary test
-
-    res.render("products", { products });
+    try {
+        const products = await prisma.product.findMany();
+        res.render("products", { products });
+    } catch (err) {
+        console.error("Products error:", err);
+        res.status(500).send("Error loading products");
+    }
 
 });
 
 // Customer: order specific product
 app.get("/products/:id/order", async (req, res) => {
 
-    const id = parseInt(req.params.id, 10);
-    if (Number.isNaN(id)) {
-        return res.send("Invalid product id");
+    try {
+        const id = parseInt(req.params.id, 10);
+        if (Number.isNaN(id)) {
+            return res.send("Invalid product id");
+        }
+
+        const product = await prisma.product.findUnique({
+            where: { id }
+        });
+
+        if (!product) {
+            return res.send("Product not found");
+        }
+
+        res.render("product-order", { product });
+    } catch (err) {
+        console.error("Product order error:", err);
+        res.status(500).send("Error loading product");
     }
 
-    const product = await prisma.product.findUnique({
-        where: { id }
-    });
-
-    if (!product) {
-        return res.send("Product not found");
-    }
-
-    res.render("product-order", { product });
 });
 // New product form
 app.get("/products/new", (req, res) => {
@@ -226,20 +254,29 @@ app.post(
     upload.single("image"),
     async (req, res) => {
 
-        const { name, description, price } = req.body;
+        try {
+            const { name, description, price } = req.body;
 
-        const image = "/uploads/" + req.file.filename;
-
-        await prisma.product.create({
-            data: {
-                name,
-                description,
-                price: parseFloat(price),
-                image
+            if (!req.file) {
+                return res.status(400).send("Image is required");
             }
-        });
 
-        res.redirect("/products");
+            const image = "/uploads/" + req.file.filename;
+
+            await prisma.product.create({
+                data: {
+                    name,
+                    description,
+                    price: parseFloat(price),
+                    image
+                }
+            });
+
+            res.redirect("/products");
+        } catch (err) {
+            console.error("Create product error:", err);
+            res.status(500).send("Error creating product");
+        }
 
     }
 );
@@ -250,67 +287,110 @@ app.post(
 
 app.get("/dashboard", async (req, res) => {
 
-    if (!req.session.adminId) {
-        return res.redirect("/login");
+    try {
+        if (!req.session.adminId) {
+            return res.redirect("/login");
+        }
+
+        const totalProducts = await prisma.product.count();
+        const totalOrders = await prisma.order.count();
+
+        res.render("dashboard", {
+            totalProducts,
+            totalOrders,
+            adminEmail: req.session.adminEmail
+        });
+    } catch (err) {
+        console.error("Dashboard error:", err);
+        res.status(500).send("Error loading dashboard");
     }
 
-    const totalProducts = await prisma.product.count();
-    const totalOrders = await prisma.order.count();
-
-    res.render("dashboard", {
-        totalProducts,
-        totalOrders,
-        adminEmail: req.session.adminEmail
-    });
 });
 
 // Handle product deletion
 app.get("/products/delete/:id", async (req, res) => {
 
-    const id = parseInt(req.params.id);
+    try {
+        const id = parseInt(req.params.id);
 
-    await prisma.product.delete({
-        where: { id }
-    });
+        await prisma.product.delete({
+            where: { id }
+        });
 
-    res.redirect("/products");
+        res.redirect("/products");
+    } catch (err) {
+        console.error("Delete product error:", err);
+        res.status(500).send("Error deleting product");
+    }
 
 });
 
 //edit product form
 app.get("/products/edit/:id", async (req, res) => {
 
-    const id = parseInt(req.params.id);
+    try {
+        const id = parseInt(req.params.id);
 
-    const product = await prisma.product.findUnique({
-        where: { id }
-    });
+        const product = await prisma.product.findUnique({
+            where: { id }
+        });
 
-    res.render("edit-product", { product });
-
-});
-
-app.post("/products/edit/:id", async (req, res) => {
-
-    const id = parseInt(req.params.id);
-
-    const { name, description, price, image } = req.body;
-
-    await prisma.product.update({
-        where: { id },
-        data: {
-            name,
-            description,
-            price: parseFloat(price),
-            image
+        if (!product) {
+            return res.send("Product not found");
         }
-    });
 
-    res.redirect("/products");
+        res.render("edit-product", { product });
+    } catch (err) {
+        console.error("Edit product form error:", err);
+        res.status(500).send("Error loading product");
+    }
 
 });
+
+app.post(
+    "/products/edit/:id",
+    upload.single("image"),
+    async (req, res) => {
+
+        try {
+            const id = parseInt(req.params.id);
+
+            const { name, description, price } = req.body;
+
+            const data = {
+                name,
+                description,
+                price: parseFloat(price)
+            };
+
+            if (req.file) {
+                data.image = "/uploads/" + req.file.filename;
+            }
+
+            await prisma.product.update({
+                where: { id },
+                data
+            });
+
+            res.redirect("/products");
+        } catch (err) {
+            console.error("Update product error:", err);
+            res.status(500).send("Error updating product");
+        }
+
+    }
+);
     
 
+// =========================
+// GLOBAL ERROR HANDLER
+// =========================
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).send("Internal Server Error");
+});
+
+// =========================
 // START SERVER
 // =========================
 const PORT = process.env.PORT || 3000;

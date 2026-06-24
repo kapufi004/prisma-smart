@@ -110,7 +110,7 @@
     </div>
 
     <div class="form-wrapper">
-        <form action="/products/edit/<%= product.id %>" method="POST" class="product-form">
+        <form action="/products/edit/<%= product.id %>" method="POST" enctype="multipart/form-data" class="product-form">
 
             <div class="form-group">
                 <label for="name">Product Name</label>
@@ -128,8 +128,12 @@
             </div>
 
             <div class="form-group">
-                <label for="image">Image URL</label>
-                <input type="text" id="image" name="image" value="<%= product.image %>" required>
+                <label>Current Image</label>
+                <div style="margin-bottom: 8px;">
+                    <img src="<%= product.image %>" alt="<%= product.name %>" style="width: 200px; height: 120px; object-fit: cover; border-radius: 8px;">
+                </div>
+                <label for="image">Replace Image (optional)</label>
+                <input type="file" id="image" name="image" accept="image/*">
             </div>
 
             <div class="button-group">
