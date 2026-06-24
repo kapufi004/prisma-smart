@@ -47,17 +47,28 @@ app.use(session({
 
 app.use(express.static("public"));
 
+// Serve the kapufi landing page as static assets
+app.use(express.static("kapufi"));
 
 // =========================
-// HOME PAGE
+// LANDING PAGE
 // =========================
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
+
+    res.sendFile(path.join(__dirname, "kapufi", "index.html"));
+
+});
+
+// =========================
+// STORE PAGE (product listing)
+// =========================
+app.get("/store", async (req, res) => {
 
     try {
         const products = await prisma.product.findMany();
         res.render("index", { products });
     } catch (err) {
-        console.error("Home error:", err);
+        console.error("Store error:", err);
         res.status(500).send("Error loading products");
     }
 
